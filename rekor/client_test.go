@@ -1,4 +1,4 @@
-package main
+package rekor
 
 import (
 	"io"
@@ -39,7 +39,7 @@ func TestGetLogEntry(t *testing.T) {
 		`/api/v1/log/entries`: `testdata/rekor-api-log-entry.json`,
 	})
 
-	rc, err := newRekorClient(ts.URL)
+	rc, err := NewClient(ts.URL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,7 +62,7 @@ func TestGetTreeState(t *testing.T) {
 		`/api/v1/log`: `testdata/rekor-api-log.json`,
 	})
 
-	rc, err := newRekorClient(ts.URL)
+	rc, err := NewClient(ts.URL)
 	if err != nil {
 		t.Fatal(err)
 	}

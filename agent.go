@@ -5,17 +5,19 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/nsmith5/rekor-sidekick/rekor"
 )
 
 type agent struct {
-	rc *rekorClient
+	rc *rekor.Client
 
 	quit chan struct{}
 }
 
 // newAgent constructs an agent from config or bails
 func newAgent(c config) (*agent, error) {
-	rc, err := newRekorClient(c.RekorServerURL)
+	rc, err := rekor.NewClient(c.RekorServerURL)
 	if err != nil {
 		return nil, err
 	}
@@ -46,9 +48,9 @@ func (a *agent) run() error {
 			return nil
 
 		default:
-			entry, err := a.rc.getNextLogEntry()
+			entry, err := a.rc.GetNextLogEntry()
 			if err != nil {
-				if err == ErrEntryDoesntExist {
+				if err == rekor.ErrEntryDoesntExist {
 					// Log doesn't exist yet, lets just wait 10 seconds and try again
 					time.Sleep(10 * time.Second)
 

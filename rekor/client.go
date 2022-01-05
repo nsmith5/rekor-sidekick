@@ -1,4 +1,4 @@
-package main
+package rekor
 
 import (
 	"encoding/base64"
@@ -14,31 +14,33 @@ var (
 	ErrEntryDoesntExist = errors.New(`Rekor entry doesn't exist yet`)
 )
 
-// rekorEntry is unstructured, we create this type simply
-// to know what we're talking about passing it around
-type rekorLogEntry struct {
+// LogEntry is a Rekor log entry
+type LogEntry struct {
 	Kind       string
 	APIVersion string `json:"apiVersion"`
 	Spec       interface{}
 }
 
-// rekorTreeState represents the current state of the transparency log (size
+// treeState represents the current state of the transparency log (size
 // etc)
-type rekorTreeState struct {
+type treeState struct {
 	RootHash       string
 	SignedTreeHead string
 	TreeSize       uint
 }
 
-type rekorClient struct {
+// Client is a Rekor api client
+type Client struct {
 	baseURL      string
 	currentIndex uint
 
 	*http.Client
 }
 
-func newRekorClient(baseURL string) (*rekorClient, error) {
-	rc := rekorClient{
+// NewClient returns a Rekor client or fails if the baseURL
+// is misconfigured.
+func NewClient(baseURL string) (*Client, error) {
+	rc := Client{
 		baseURL:      baseURL,
 		currentIndex: 0,
 		Client:       new(http.Client),
@@ -58,7 +60,7 @@ func newRekorClient(baseURL string) (*rekorClient, error) {
 	return &rc, nil
 }
 
-func (rc *rekorClient) getLogEntry(index uint) (*rekorLogEntry, error) {
+func (rc *Client) getLogEntry(index uint) (*LogEntry, error) {
 	url := fmt.Sprintf("%s/api/v1/log/entries?logIndex=%d", rc.baseURL, index)
 
 	req, err := http.NewRequest(`GET`, url, nil)
@@ -97,7 +99,7 @@ func (rc *rekorClient) getLogEntry(index uint) (*rekorLogEntry, error) {
 		break
 	}
 
-	var entry rekorLogEntry
+	var entry LogEntry
 	err = json.NewDecoder(
 		base64.NewDecoder(base64.URLEncoding, strings.NewReader(body)),
 	).Decode(&entry)
@@ -108,7 +110,9 @@ func (rc *rekorClient) getLogEntry(index uint) (*rekorLogEntry, error) {
 	return &entry, nil
 }
 
-func (rc *rekorClient) getNextLogEntry() (*rekorLogEntry, error) {
+// GetNextLogEntry pulls the next entry in the Rekor log. If the
+// next log doesn't exist yet ErrEntryDoesntExist is returned.
+func (rc *Client) GetNextLogEntry() (*LogEntry, error) {
 	entry, err := rc.getLogEntry(rc.currentIndex)
 	if err != nil {
 		return nil, err
@@ -117,7 +121,7 @@ func (rc *rekorClient) getNextLogEntry() (*rekorLogEntry, error) {
 	return entry, nil
 }
 
-func (rc *rekorClient) getTreeState() (*rekorTreeState, error) {
+func (rc *Client) getTreeState() (*treeState, error) {
 	url := fmt.Sprintf("%s/api/v1/log", rc.baseURL)
 
 	req, err := http.NewRequest(`GET`, url, nil)
@@ -131,7 +135,7 @@ func (rc *rekorClient) getTreeState() (*rekorTreeState, error) {
 	}
 	defer resp.Body.Close()
 
-	var state rekorTreeState
+	var state treeState
 	err = json.NewDecoder(resp.Body).Decode(&state)
 	if err != nil {
 		return nil, err

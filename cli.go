@@ -56,8 +56,6 @@ func runCLI(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	fmt.Printf("debug: config %#v\n", c)
-
 	a, err := newAgent(c)
 	if err != nil {
 		fmt.Println("Failed to initialize agent:", err)

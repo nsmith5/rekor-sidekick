@@ -1,4 +1,5 @@
 rekorServerURL: https://rekor.sigstore.dev
+
 policies:
 - name: x509-used
   description: |-
@@ -17,3 +18,5 @@ policies:
     package auth
     default allow = true
 
+outputs:
+  stdout: {}

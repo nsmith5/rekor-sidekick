@@ -3,15 +3,16 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
+	"github.com/nsmith5/rekor-sidekick/outputs"
 	"github.com/nsmith5/rekor-sidekick/rekor"
 )
 
 type agent struct {
 	rc       *rekor.Client
 	policies []policy
+	outs     []outputs.Output
 
 	quit chan struct{}
 }
@@ -25,9 +26,19 @@ func newAgent(c config) (*agent, error) {
 
 	policies := c.Policies
 
+	var outs []outputs.Output
+	for name, conf := range c.Outputs {
+		output, err := outputs.LoadDriver(name, conf)
+		if err != nil {
+			// Huh... log this issue I guess?
+			continue
+		}
+		outs = append(outs, output)
+	}
+
 	quit := make(chan struct{})
 
-	return &agent{rc, policies, quit}, nil
+	return &agent{rc, policies, outs, quit}, nil
 }
 
 // run starts off the agent. The call blocks or exits returning an error
@@ -77,9 +88,17 @@ func (a *agent) run() error {
 				}
 
 				if violation {
-					// TODO: Send to outputs!
-					fmt.Printf("Entry %#v violated policy %s\n", entry, p.Name)
-					time.Sleep(5 * time.Second)
+					for _, out := range a.outs {
+						// TODO: Populate the rekor URL!
+						e := outputs.Event{
+							Name:        p.Name,
+							Description: p.Description,
+							RekorURL:    `dunno...`,
+						}
+
+						// TODO: Do something on send failure
+						out.Send(e)
+					}
 				}
 			}
 		}

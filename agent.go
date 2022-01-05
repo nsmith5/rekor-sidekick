@@ -10,7 +10,8 @@ import (
 )
 
 type agent struct {
-	rc *rekor.Client
+	rc       *rekor.Client
+	policies []policy
 
 	quit chan struct{}
 }
@@ -22,9 +23,11 @@ func newAgent(c config) (*agent, error) {
 		return nil, err
 	}
 
+	policies := c.Policies
+
 	quit := make(chan struct{})
 
-	return &agent{rc, quit}, nil
+	return &agent{rc, policies, quit}, nil
 }
 
 // run starts off the agent. The call blocks or exits returning an error
@@ -65,9 +68,20 @@ func (a *agent) run() error {
 			// Incase we just recovered from a temporary outage, lets reset the backoff
 			currentBackoff = initialBackoff
 
-			// TODO: Do something with this log entry!
-			fmt.Printf("%#v\n", entry)
-			time.Sleep(5 * time.Second)
+			// Policy checks!
+			for _, p := range a.policies {
+				violation, err := p.allowed(entry)
+				if err != nil {
+					// huh... what to do here?
+					continue
+				}
+
+				if violation {
+					// TODO: Send to outputs!
+					fmt.Printf("Entry %#v violated policy %s\n", entry, p.Name)
+					time.Sleep(5 * time.Second)
+				}
+			}
 		}
 	}
 }

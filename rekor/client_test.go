@@ -49,10 +49,10 @@ func TestGetLogEntry(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if entry.Kind != `rekord` {
+	if kind := entry["kind"].(string); kind != `rekord` {
 		t.Error(`expected rekord type`)
 	}
-	if entry.APIVersion != `0.0.1` {
+	if version := entry["apiVersion"].(string); version != `0.0.1` {
 		t.Error(`expected api version 0.0.1`)
 	}
 }

@@ -15,11 +15,7 @@ var (
 )
 
 // LogEntry is a Rekor log entry
-type LogEntry struct {
-	Kind       string
-	APIVersion string `json:"apiVersion"`
-	Spec       interface{}
-}
+type LogEntry map[string]interface{}
 
 // treeState represents the current state of the transparency log (size
 // etc)
@@ -60,7 +56,7 @@ func NewClient(baseURL string) (*Client, error) {
 	return &rc, nil
 }
 
-func (rc *Client) getLogEntry(index uint) (*LogEntry, error) {
+func (rc *Client) getLogEntry(index uint) (LogEntry, error) {
 	url := fmt.Sprintf("%s/api/v1/log/entries?logIndex=%d", rc.baseURL, index)
 
 	req, err := http.NewRequest(`GET`, url, nil)
@@ -99,7 +95,7 @@ func (rc *Client) getLogEntry(index uint) (*LogEntry, error) {
 		break
 	}
 
-	var entry LogEntry
+	var entry = make(LogEntry)
 	err = json.NewDecoder(
 		base64.NewDecoder(base64.URLEncoding, strings.NewReader(body)),
 	).Decode(&entry)
@@ -107,12 +103,12 @@ func (rc *Client) getLogEntry(index uint) (*LogEntry, error) {
 		return nil, err
 	}
 
-	return &entry, nil
+	return entry, nil
 }
 
 // GetNextLogEntry pulls the next entry in the Rekor log. If the
 // next log doesn't exist yet ErrEntryDoesntExist is returned.
-func (rc *Client) GetNextLogEntry() (*LogEntry, error) {
+func (rc *Client) GetNextLogEntry() (LogEntry, error) {
 	entry, err := rc.getLogEntry(rc.currentIndex)
 	if err != nil {
 		return nil, err

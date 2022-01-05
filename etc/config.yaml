@@ -1,0 +1,19 @@
+rekorServerURL: https://rekor.sigstore.dev
+policies:
+- name: x509-used
+  description: |-
+    Alerts if any x509 type key is used
+  body: |
+    package auth
+    default allow = false
+    allow {
+      format := input.spec.signature.format
+      format != "x509"
+    }
+- name: allow-all
+  description: |-
+    Alerts on all entries
+  body: |
+    package auth
+    default allow = true
+

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -47,16 +48,24 @@ func (a *agent) run() error {
 		default:
 			entry, err := a.rc.getNextLogEntry()
 			if err != nil {
-				// Lets assume a temporary outage and retry with exponential backoff
-				time.Sleep(currentBackoff * time.Second)
-				currentBackoff *= 2
+				if err == ErrEntryDoesntExist {
+					// Log doesn't exist yet, lets just wait 10 seconds and try again
+					time.Sleep(10 * time.Second)
+
+				} else {
+					// Lets assume a temporary outage and retry with exponential backoff
+					time.Sleep(currentBackoff * time.Second)
+					currentBackoff *= 2
+				}
+				break
 			}
 
 			// Incase we just recovered from a temporary outage, lets reset the backoff
 			currentBackoff = initialBackoff
 
 			// TODO: Do something with this log entry!
-			_ = entry
+			fmt.Printf("%#v\n", entry)
+			time.Sleep(5 * time.Second)
 		}
 	}
 }

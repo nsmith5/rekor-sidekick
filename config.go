@@ -1,5 +1,5 @@
 package main
 
 type config struct {
-	RekorServerURL string
+	RekorServerURL string `yaml:"rekorServerURL"`
 }

@@ -9,6 +9,11 @@ import (
 	"strings"
 )
 
+var (
+	// ErrEntryDoesntExist signals a log entry that hasn't made it into the Rekor log just yet
+	ErrEntryDoesntExist = errors.New(`Rekor entry doesn't exist yet`)
+)
+
 // rekorEntry is unstructured, we create this type simply
 // to know what we're talking about passing it around
 type rekorLogEntry struct {
@@ -66,6 +71,10 @@ func (rc *rekorClient) getLogEntry(index uint) (*rekorLogEntry, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, ErrEntryDoesntExist
+	}
 
 	m := make(map[string]interface{})
 	err = json.NewDecoder(resp.Body).Decode(&m)

@@ -1,23 +1,80 @@
 package main
 
-import "context"
+import (
+	"context"
+	"errors"
+	"time"
+)
 
 type agent struct {
+	rc *rekorClient
+
+	quit chan struct{}
 }
 
 // newAgent constructs an agent from config or bails
 func newAgent(c config) (*agent, error) {
-	return nil, ErrNotImplimented
+	rc, err := newRekorClient(c.RekorServerURL)
+	if err != nil {
+		return nil, err
+	}
+
+	quit := make(chan struct{})
+
+	return &agent{rc, quit}, nil
 }
 
 // run starts off the agent. The call blocks or exits returning an error
 // if the agent hits a fatal error.
 func (a *agent) run() error {
-	return ErrNotImplimented
+	const initialBackoff = time.Duration(10)
+	var currentBackoff = time.Duration(10)
+
+	for {
+		select {
+		case _, ok := <-a.quit:
+			if !ok {
+				// Should be unreachable as we're supposed to close the channel
+				// ourselves!
+				return errors.New(`agent: quit chan closed. agent state corrupted`)
+			}
+
+			// Close channel to signal to shutdown caller we've cleanly shutdown
+			close(a.quit)
+
+			return nil
+
+		default:
+			entry, err := a.rc.getNextLogEntry()
+			if err != nil {
+				// Lets assume a temporary outage and retry with exponential backoff
+				time.Sleep(currentBackoff * time.Second)
+				currentBackoff *= 2
+			}
+
+			// Incase we just recovered from a temporary outage, lets reset the backoff
+			currentBackoff = initialBackoff
+
+			// TODO: Do something with this log entry!
+			_ = entry
+		}
+	}
 }
 
 // shutdown gracefully stops the agent. Shutdown can take an arbitrarily long time. Use
-// context cancellation to force shutdown.
-func (a *agent) shutdown(context.Context) error {
-	return ErrNotImplimented
+// context cancellation to force shutdown. Calling shutdown more than once will cause a
+// panic.
+func (a *agent) shutdown(ctx context.Context) error {
+	a.quit <- struct{}{}
+
+	select {
+	case <-a.quit:
+		// Graceful shutdown complete
+		return nil
+
+	case <-ctx.Done():
+		// We took too long shutting down and the caller is
+		// angry. Time to give up
+		return errors.New(`timeout on graceful shutdown of agent`)
+	}
 }

@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/nsmith5/rekor-sidekick/outputs"
 	"github.com/nsmith5/rekor-sidekick/rekor"
 )
 
 type agent struct {
 	rc       *rekor.Client
 	policies []policy
+	outs     []outputs.Output
 
 	quit chan struct{}
 }
@@ -25,9 +27,23 @@ func newAgent(c config) (*agent, error) {
 
 	policies := c.Policies
 
+	fmt.Println("debug: outputs in config", c.Outputs)
+
+	var outs []outputs.Output
+	for name, conf := range c.Outputs {
+		output, err := outputs.LoadDriver(name, conf)
+		if err != nil {
+			// Huh... log this issue I guess?
+			continue
+		}
+		outs = append(outs, output)
+	}
+
+	fmt.Printf("debug: output drivers %#v\n", outs)
+
 	quit := make(chan struct{})
 
-	return &agent{rc, policies, quit}, nil
+	return &agent{rc, policies, outs, quit}, nil
 }
 
 // run starts off the agent. The call blocks or exits returning an error
@@ -55,21 +71,27 @@ func (a *agent) run() error {
 			if err != nil {
 				if err == rekor.ErrEntryDoesntExist {
 					// Log doesn't exist yet, lets just wait 10 seconds and try again
+					fmt.Println("debug: no entry available. time to snooze")
 					time.Sleep(10 * time.Second)
 
 				} else {
 					// Lets assume a temporary outage and retry with exponential backoff
+					fmt.Println("debug: outage! backoff started")
 					time.Sleep(currentBackoff * time.Second)
 					currentBackoff *= 2
 				}
 				break
 			}
 
+			fmt.Println("debug: got an entry!")
+
 			// Incase we just recovered from a temporary outage, lets reset the backoff
 			currentBackoff = initialBackoff
 
 			// Policy checks!
 			for _, p := range a.policies {
+				fmt.Printf("debug: iterating policies")
+
 				violation, err := p.allowed(entry)
 				if err != nil {
 					// huh... what to do here?
@@ -77,9 +99,23 @@ func (a *agent) run() error {
 				}
 
 				if violation {
-					// TODO: Send to outputs!
-					fmt.Printf("Entry %#v violated policy %s\n", entry, p.Name)
-					time.Sleep(5 * time.Second)
+					fmt.Println("debug: violation!")
+					for _, out := range a.outs {
+						// TODO: Populate the rekor URL!
+						e := outputs.Event{
+							Name:        p.Name,
+							Description: p.Description,
+							RekorURL:    `dunno...`,
+						}
+
+						// TODO: Do something on send failure
+						err = out.Send(e)
+						if err != nil {
+							fmt.Println("debug: error sending output")
+						} else {
+							fmt.Println("debug: successful sent output")
+						}
+					}
 				}
 			}
 		}

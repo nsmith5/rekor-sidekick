@@ -6,4 +6,7 @@ type config struct {
 	RekorServerURL string                            `yaml:"rekorServerURL"`
 	Policies       []policy.Policy                   `yaml:"policies"`
 	Outputs        map[string]map[string]interface{} `yaml:"outputs"`
+	Logging        struct {
+		Level string
+	}
 }

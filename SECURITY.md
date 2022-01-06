@@ -15,6 +15,7 @@ currently being supported with security updates.
 
 ## Reporting a Vulnerability
 
-Rekor sidekick encourages responsible disclosure of vulnerabilities. Vulnerabilities can be
-emailed to rekor-sidekick@nfsmith.ca. PGP key and alternate secure communication mechanism
-available at https://keybase.io/nfsmith
+Rekor sidekick encourages responsible disclosure of vulnerabilities.
+Vulnerabilities can be emailed to rekor-sidekick@nfsmith.ca. PGP key and
+alternate secure communication mechanism available at
+https://keybase.io/nfsmith

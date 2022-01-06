@@ -93,7 +93,7 @@ func (a *agent) run() error {
 			for _, p := range a.policies {
 				fmt.Printf("debug: iterating policies")
 
-				alert, err := p.Alert(entry)
+				alert, err := p.Alert(entry.Body)
 				if err != nil {
 					// huh... what to do here?
 					continue
@@ -102,15 +102,7 @@ func (a *agent) run() error {
 				if alert {
 					fmt.Println("debug: violation!")
 					for _, out := range a.outs {
-						// TODO: Populate the rekor URL!
-						e := outputs.Event{
-							Name:        p.Name,
-							Description: p.Description,
-							RekorURL:    `dunno...`,
-						}
-
-						// TODO: Do something on send failure
-						err = out.Send(e)
+						err = out.Send(outputs.Event{Policy: p, Entry: *entry})
 						if err != nil {
 							fmt.Println("debug: error sending output")
 						} else {

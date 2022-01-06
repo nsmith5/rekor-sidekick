@@ -1,9 +1,13 @@
 package outputs
 
+import (
+	"github.com/nsmith5/rekor-sidekick/policy"
+	"github.com/nsmith5/rekor-sidekick/rekor"
+)
+
 type Event struct {
-	Name        string
-	Description string
-	RekorURL    string
+	Policy policy.Policy
+	Entry  rekor.LogEntry
 }
 
 type Output interface {

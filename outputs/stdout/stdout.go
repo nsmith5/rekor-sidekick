@@ -1,26 +1,24 @@
 package stdout
 
 import (
-	"fmt"
+	"encoding/json"
+	"os"
 
 	"github.com/nsmith5/rekor-sidekick/outputs"
 )
 
-type impl struct{}
+type impl struct {
+	enc *json.Encoder
+}
 
-func (i impl) Send(e outputs.Event) error {
-	fmt.Printf(
-		`{"name": "%s", "description": "%s", rekorURL: "%s"}`,
-		e.Name,
-		e.Description,
-		e.RekorURL,
-	)
-	fmt.Println()
-	return nil
+func (i *impl) Send(e outputs.Event) error {
+	return i.enc.Encode(e)
 }
 
 func New(map[string]interface{}) (outputs.Output, error) {
-	return &impl{}, nil
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "\t")
+	return &impl{enc}, nil
 }
 
 func init() {

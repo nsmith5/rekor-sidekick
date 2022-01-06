@@ -122,7 +122,7 @@ func (rc *Client) getLogEntry(index uint) (*LogEntry, error) {
 	}
 
 	// (1) UUID -> URL
-	entry.URL = fmt.Sprintf("%s/api/v1/entries/%s", rc.baseURL, uuid)
+	entry.URL = fmt.Sprintf("%s/api/v1/log/entries/%s", rc.baseURL, uuid)
 
 	// (2) Unix time -> created time
 	entry.IntegratedAt = time.Unix(int64(unix), 0)

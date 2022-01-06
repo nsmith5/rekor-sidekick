@@ -1,5 +1,8 @@
 rekorServerURL: https://rekor.sigstore.dev
 
+logging:
+  level: trace
+
 policies:
 - name: x509-used
   description: |-

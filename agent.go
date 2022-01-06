@@ -7,12 +7,13 @@ import (
 	"time"
 
 	"github.com/nsmith5/rekor-sidekick/outputs"
+	"github.com/nsmith5/rekor-sidekick/policy"
 	"github.com/nsmith5/rekor-sidekick/rekor"
 )
 
 type agent struct {
 	rc       *rekor.Client
-	policies []policy
+	policies []policy.Policy
 	outs     []outputs.Output
 
 	quit chan struct{}
@@ -92,13 +93,13 @@ func (a *agent) run() error {
 			for _, p := range a.policies {
 				fmt.Printf("debug: iterating policies")
 
-				violation, err := p.allowed(entry)
+				alert, err := p.Alert(entry)
 				if err != nil {
 					// huh... what to do here?
 					continue
 				}
 
-				if violation {
+				if alert {
 					fmt.Println("debug: violation!")
 					for _, out := range a.outs {
 						// TODO: Populate the rekor URL!

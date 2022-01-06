@@ -5,9 +5,9 @@ policies:
   description: |-
     Alerts if any x509 type key is used
   body: |
-    package auth
-    default allow = false
-    allow {
+    package sidekick
+    default alert = false
+    alert {
       format := input.spec.signature.format
       format == "x509"
     }
@@ -15,8 +15,8 @@ policies:
   description: |-
     Alerts on all entries
   body: |
-    package auth
-    default allow = true
+    package sidekick
+    default alert = true
 
 outputs:
   stdout:

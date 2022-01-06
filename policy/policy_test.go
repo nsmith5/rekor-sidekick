@@ -1,43 +1,41 @@
-package main
+package policy
 
 import (
 	"testing"
-
-	"github.com/nsmith5/rekor-sidekick/rekor"
 )
 
 func TestPolicy(t *testing.T) {
-	tests := map[policy]struct {
-		Allow []rekor.LogEntry
-		Deny  []rekor.LogEntry
+	tests := map[Policy]struct {
+		Allow []map[string]interface{}
+		Deny  []map[string]interface{}
 	}{
-		policy{
+		Policy{
 			Name:        `allow-all`,
 			Description: ``,
-			Body:        "package auth\ndefault allow = true",
+			Body:        "package sidekick\ndefault alert = true",
 		}: {
-			Allow: []rekor.LogEntry{
-				rekor.LogEntry{
+			Allow: []map[string]interface{}{
+				{
 					"spec": map[string]interface{}{
 						"foo": "bar",
 					},
 				},
-				rekor.LogEntry{},
+				{},
 			},
-			Deny: []rekor.LogEntry{},
+			Deny: []map[string]interface{}{},
 		},
-		policy{
+		Policy{
 			Name:        `only x509 signature`,
 			Description: ``,
-			Body: `package auth
-			default auth = false
-			allow {
+			Body: `package sidekick
+			default alert = false
+			alert {
 			   format := input.spec.signature.format
 			   format == "x509"
 			}`,
 		}: {
-			Allow: []rekor.LogEntry{
-				rekor.LogEntry{
+			Allow: []map[string]interface{}{
+				{
 					"spec": map[string]interface{}{
 						"signature": map[string]interface{}{
 							"format": "x509",
@@ -45,8 +43,8 @@ func TestPolicy(t *testing.T) {
 					},
 				},
 			},
-			Deny: []rekor.LogEntry{
-				rekor.LogEntry{
+			Deny: []map[string]interface{}{
+				{
 					"spec": map[string]interface{}{
 						"signature": map[string]interface{}{
 							"format": "minisign",
@@ -60,24 +58,24 @@ func TestPolicy(t *testing.T) {
 	for p, data := range tests {
 		t.Run(p.Name, func(t *testing.T) {
 			for _, entry := range data.Allow {
-				violation, err := p.allowed(entry)
+				alert, err := p.Alert(entry)
 				if err != nil {
 					t.Errorf("policy %s failed to check allowed entry with error %s", p.Name, err)
 					continue
 				}
-				if !violation {
+				if !alert {
 					t.Errorf("policy %s denied entry which was expected to be allowed", p.Name)
 				}
 
 			}
 
 			for _, entry := range data.Deny {
-				violation, err := p.allowed(entry)
+				alert, err := p.Alert(entry)
 				if err != nil {
 					t.Errorf("policy %s failed to check allowed entry with error %s", p.Name, err)
 					continue
 				}
-				if violation {
+				if alert {
 					t.Errorf("policy %s allowed entry which was expected to be denied", p.Name)
 				}
 

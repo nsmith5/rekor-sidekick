@@ -9,7 +9,7 @@ policies:
     default allow = false
     allow {
       format := input.spec.signature.format
-      format != "x509"
+      format == "x509"
     }
 - name: allow-all
   description: |-
@@ -19,4 +19,5 @@ policies:
     default allow = true
 
 outputs:
-  stdout: {}
+  stdout:
+    enabled: true

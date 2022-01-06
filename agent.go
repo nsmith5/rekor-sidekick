@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/nsmith5/rekor-sidekick/outputs"
@@ -26,6 +27,8 @@ func newAgent(c config) (*agent, error) {
 
 	policies := c.Policies
 
+	fmt.Println("debug: outputs in config", c.Outputs)
+
 	var outs []outputs.Output
 	for name, conf := range c.Outputs {
 		output, err := outputs.LoadDriver(name, conf)
@@ -35,6 +38,8 @@ func newAgent(c config) (*agent, error) {
 		}
 		outs = append(outs, output)
 	}
+
+	fmt.Printf("debug: output drivers %#v\n", outs)
 
 	quit := make(chan struct{})
 
@@ -66,21 +71,27 @@ func (a *agent) run() error {
 			if err != nil {
 				if err == rekor.ErrEntryDoesntExist {
 					// Log doesn't exist yet, lets just wait 10 seconds and try again
+					fmt.Println("debug: no entry available. time to snooze")
 					time.Sleep(10 * time.Second)
 
 				} else {
 					// Lets assume a temporary outage and retry with exponential backoff
+					fmt.Println("debug: outage! backoff started")
 					time.Sleep(currentBackoff * time.Second)
 					currentBackoff *= 2
 				}
 				break
 			}
 
+			fmt.Println("debug: got an entry!")
+
 			// Incase we just recovered from a temporary outage, lets reset the backoff
 			currentBackoff = initialBackoff
 
 			// Policy checks!
 			for _, p := range a.policies {
+				fmt.Printf("debug: iterating policies")
+
 				violation, err := p.allowed(entry)
 				if err != nil {
 					// huh... what to do here?
@@ -88,6 +99,7 @@ func (a *agent) run() error {
 				}
 
 				if violation {
+					fmt.Println("debug: violation!")
 					for _, out := range a.outs {
 						// TODO: Populate the rekor URL!
 						e := outputs.Event{
@@ -97,7 +109,12 @@ func (a *agent) run() error {
 						}
 
 						// TODO: Do something on send failure
-						out.Send(e)
+						err = out.Send(e)
+						if err != nil {
+							fmt.Println("debug: error sending output")
+						} else {
+							fmt.Println("debug: successful sent output")
+						}
 					}
 				}
 			}

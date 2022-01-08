@@ -10,29 +10,7 @@ import (
 	"time"
 )
 
-var (
-	// ErrEntryDoesntExist signals a log entry that hasn't made it into the Rekor log just yet
-	ErrEntryDoesntExist = errors.New(`Rekor entry doesn't exist yet`)
-)
-
-// LogEntry is a Rekor log entry
-type LogEntry struct {
-	URL          string
-	IntegratedAt time.Time
-	Index        uint
-	Body         map[string]interface{}
-}
-
-// treeState represents the current state of the transparency log (size
-// etc)
-type treeState struct {
-	RootHash       string
-	SignedTreeHead string
-	TreeSize       uint
-}
-
-// Client is a Rekor api client
-type Client struct {
+type impl struct {
 	baseURL      string
 	currentIndex uint
 
@@ -41,8 +19,8 @@ type Client struct {
 
 // NewClient returns a Rekor client or fails if the baseURL
 // is misconfigured.
-func NewClient(baseURL string) (*Client, error) {
-	rc := Client{
+func NewClient(baseURL string) (Client, error) {
+	rc := impl{
 		baseURL:      baseURL,
 		currentIndex: 0,
 		Client:       new(http.Client),
@@ -51,7 +29,7 @@ func NewClient(baseURL string) (*Client, error) {
 	// Grab the latest signed tree state and use the tree size as a starting
 	// point to start iterating log entries. Its not the very tip of the log,
 	// but its close enough for us.
-	state, err := rc.getTreeState()
+	state, err := rc.GetTreeState()
 	if err != nil {
 		// If this bailed... we're going to guess its probably misconfiguration
 		// not a temporary outage. Lets just bail hard.
@@ -62,7 +40,7 @@ func NewClient(baseURL string) (*Client, error) {
 	return &rc, nil
 }
 
-func (rc *Client) getLogEntry(index uint) (*LogEntry, error) {
+func (rc *impl) GetEntry(index uint) (*LogEntry, error) {
 	var entry LogEntry
 
 	entry.Index = index
@@ -140,10 +118,8 @@ func (rc *Client) getLogEntry(index uint) (*LogEntry, error) {
 	return &entry, nil
 }
 
-// GetNextLogEntry pulls the next entry in the Rekor log. If the
-// next log doesn't exist yet ErrEntryDoesntExist is returned.
-func (rc *Client) GetNextLogEntry() (*LogEntry, error) {
-	entry, err := rc.getLogEntry(rc.currentIndex)
+func (rc *impl) GetNextEntry() (*LogEntry, error) {
+	entry, err := rc.GetEntry(rc.currentIndex)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +127,7 @@ func (rc *Client) GetNextLogEntry() (*LogEntry, error) {
 	return entry, nil
 }
 
-func (rc *Client) getTreeState() (*treeState, error) {
+func (rc *impl) GetTreeState() (*TreeState, error) {
 	url := fmt.Sprintf("%s/api/v1/log", rc.baseURL)
 
 	req, err := http.NewRequest(`GET`, url, nil)
@@ -165,7 +141,7 @@ func (rc *Client) getTreeState() (*treeState, error) {
 	}
 	defer resp.Body.Close()
 
-	var state treeState
+	var state TreeState
 	err = json.NewDecoder(resp.Body).Decode(&state)
 	if err != nil {
 		return nil, err

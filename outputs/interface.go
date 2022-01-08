@@ -11,5 +11,9 @@ type Event struct {
 }
 
 type Output interface {
+	// Send pushes an alert event to a driver specific backend
 	Send(Event) error
+
+	// Name returns driver name
+	Name() string
 }

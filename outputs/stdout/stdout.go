@@ -7,12 +7,18 @@ import (
 	"github.com/nsmith5/rekor-sidekick/outputs"
 )
 
+const driverName = `stdout`
+
 type impl struct {
 	enc *json.Encoder
 }
 
 func (i *impl) Send(e outputs.Event) error {
 	return i.enc.Encode(e)
+}
+
+func (i *impl) Name() string {
+	return driverName
 }
 
 func New(map[string]interface{}) (outputs.Output, error) {
@@ -22,5 +28,5 @@ func New(map[string]interface{}) (outputs.Output, error) {
 }
 
 func init() {
-	outputs.RegisterDriver("stdout", outputs.CreatorFunc(New))
+	outputs.RegisterDriver(driverName, outputs.CreatorFunc(New))
 }

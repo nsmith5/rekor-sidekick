@@ -44,7 +44,7 @@ func TestGetLogEntry(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	entry, err := rc.getLogEntry(1)
+	entry, err := rc.GetEntry(1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +67,7 @@ func TestGetTreeState(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = rc.getTreeState()
+	_, err = rc.GetTreeState()
 	if err != nil {
 		t.Fatal(err)
 	}

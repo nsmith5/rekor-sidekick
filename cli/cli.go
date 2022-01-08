@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"context"
@@ -9,12 +9,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/nsmith5/rekor-sidekick/agent"
 	"github.com/oklog/run"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-func newCLI() *cobra.Command {
+// New rekor-sidekick CLI
+func New() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rekor-sidekick",
 		Short: "Transparency log monitoring and alerting",
@@ -50,13 +52,13 @@ func runCLI(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	var c config
+	var c agent.Config
 	if err := viper.Unmarshal(&c); err != nil {
 		fmt.Println("Failed to load configuration:", err)
 		os.Exit(1)
 	}
 
-	a, err := newAgent(c)
+	a, err := agent.New(c)
 	if err != nil {
 		fmt.Println("Failed to initialize agent:", err)
 		os.Exit(1)
@@ -68,10 +70,10 @@ func runCLI(cmd *cobra.Command, args []string) {
 	var g run.Group
 
 	// Agent process
-	g.Add(a.run, func(error) {
+	g.Add(a.Run, func(error) {
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
-		a.shutdown(ctx)
+		a.Shutdown(ctx)
 	})
 
 	// Signal handler process

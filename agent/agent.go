@@ -1,4 +1,4 @@
-package main
+package agent
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	logrus "github.com/sirupsen/logrus"
 )
 
-type agent struct {
+type impl struct {
 	rc       *rekor.Client
 	policies []policy.Policy
 	outs     []outputs.Output
@@ -22,8 +22,8 @@ type agent struct {
 	quit chan struct{}
 }
 
-// newAgent constructs an agent from config or bails
-func newAgent(c config) (*agent, error) {
+// New constructs an agent from config or bails
+func New(c Config) (Agent, error) {
 	log := logrus.New()
 	log.SetOutput(os.Stdout)
 	switch c.Logging.Level {
@@ -45,7 +45,7 @@ func newAgent(c config) (*agent, error) {
 	log.SetFormatter(&logrus.JSONFormatter{})
 	log.SetReportCaller(true)
 
-	rc, err := rekor.NewClient(c.RekorServerURL)
+	rc, err := rekor.NewClient(c.Server)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"err": err,
@@ -75,12 +75,10 @@ func newAgent(c config) (*agent, error) {
 
 	quit := make(chan struct{})
 
-	return &agent{rc, policies, outs, log, quit}, nil
+	return &impl{rc, policies, outs, log, quit}, nil
 }
 
-// run starts off the agent. The call blocks or exits returning an error
-// if the agent hits a fatal error.
-func (a *agent) run() error {
+func (a *impl) Run() error {
 	const initialBackoff = time.Duration(10)
 	var currentBackoff = time.Duration(10)
 
@@ -153,10 +151,7 @@ func (a *agent) run() error {
 	}
 }
 
-// shutdown gracefully stops the agent. Shutdown can take an arbitrarily long time. Use
-// context cancellation to force shutdown. Calling shutdown more than once will cause a
-// panic.
-func (a *agent) shutdown(ctx context.Context) error {
+func (a *impl) Shutdown(ctx context.Context) error {
 	a.quit <- struct{}{}
 
 	select {

@@ -5,6 +5,7 @@ import (
 
 	// Loading output drivers
 	_ "github.com/nsmith5/rekor-sidekick/outputs"
+	_ "github.com/nsmith5/rekor-sidekick/outputs/smtp"
 	_ "github.com/nsmith5/rekor-sidekick/outputs/stdout"
 )
 

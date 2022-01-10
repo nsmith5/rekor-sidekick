@@ -77,19 +77,33 @@ sha256sum rekor-sidekick_${VERSION}_${ARCH}.tar.gz
 
 ## Usage
 
-`rekor-sidekick` requires a rekor server, alert policies and alert outputs to be configured. A basic
-example configuration looks like the following:
+`rekor-sidekick` requires a rekor server, alert policies and alert outputs to
+be configured. A basic example configuration looks like the following:
 
 ```yaml
 # config.yaml
 server: https://rekor.sigstore.dev
+logging:
+  level: error
 policies:
-- name: alert-all 
+- name: alert-on-my-email
   description: |
-    Alert all policies alerts on every entry in the transparency log
+    Alert when an x509 cert with subject email:me@example.com is used
+    so sign an entry
   body: |
     package sidekick
-    default alert = true
+    
+    import future.keywords.in    
+ 
+    default alert = false
+
+    alert {
+      encodedCert := input.spec.signature.publicKey.content
+      certs := crypto.x509.parse_certificates(encodedCert)
+      emailAddresses := certs[0]["EmailAddresses"]
+      some "me@example.com" in emailAddresses
+    }
+    
 outputs:
   stdout:
     enabled: true
@@ -103,9 +117,56 @@ rekor-sidekick --config /path/to/config.yaml
 
 ## Configuration
 
-> TODO: write a thorough configuration guide including policy writing and
-> description of all the output drivers?
+Rekor Sidekick uses a single configuration file with three important sections:
+
+- `server` to point to the Rekor server you want to monitor,
+- `policies` to specify which entries you want to alert on, and,
+- `outputs` to specify where you want to send your alerts
+
+The `etc` directory contains sample configurations.
+
+## Environment variables
+
+Configuration can also be set using environment variables. They map 1:1 to
+configuration fields in the configuration file so that e.g
+`.outputs.stdout.enabled` cooresponds to the
+`REKOR_SIDEKICK_OUTPUTS_STDOUT_ENABLED` environment variable.
 
 ### Writing Alert Policies
 
+Policies are written using the
+[Rego](https://www.openpolicyagent.org/docs/latest/policy-language/) policy
+language. Some things to remember when writing your policies for Rekor
+Sidekick:
+
+- The package name on the policy _must_ be `sidekick`
+- Rekor sidekick evalutes the variable `alert` so set it to true in your policy
+  if you want to alert on an event
+- The base64 decoded contents of the `.[].body` field in a rekor log entry are
+  what Rekor sidekick evaluates as input
+
+The best approach to debugging / evalutationg policy is to grab an example log
+entry
+
+```
+export UUID=<< your example uuid here >>
+curl -X GET -H "Accept: application/json" https://rekor.sigstore.dev/api/v1/logs/entries/${UUID} | jq .[].body | base64 -d
+```
+
+Paste that data into the [Rego playground](https://play.openpolicyagent.org/)
+and iterate on your policy until it behaves how you want.
+
+> NB: you can use `print(x)` to evaluate some data and print to the browser console
+
 ### Outputs
+
+**stdout**
+
+The `stdout` driver prints alerts to the console in JSON format. To enable add
+the following to your config
+
+```diff
+outputs:
++ stdout:
++   enabled: true
+```

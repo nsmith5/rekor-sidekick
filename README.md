@@ -170,3 +170,21 @@ outputs:
 + stdout:
 +   enabled: true
 ```
+
+**cloudevents**
+
+The `cloudevents` driver emits [cloud events](https://cloudevents.io). An example
+of how to configure this output is below.
+
+```diff
+outputs:
++  cloudevents:
++    sourceID: instance-a
++    http:
++      url: http://example.com:1234
+```
+
+The `sourceID` fields configures the event source. The resulting event source
+in this case would be `github.com/nsmith5/rekor-sidekick:instance-a`. The event
+type is `rekor-sidekick.policy.violation.v1`. The `http.url` field configures
+an HTTP destination for your emitted events. 

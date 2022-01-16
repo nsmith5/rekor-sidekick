@@ -171,10 +171,10 @@ outputs:
 +   enabled: true
 ```
 
-**cloudevents**
+**Cloud Events**
 
-The `cloudevents` driver emits [cloud events](https://cloudevents.io). An example
-of how to configure this output is below.
+The `cloudevents` driver emits [cloud events](https://cloudevents.io). An
+example of how to configure this output is below.
 
 ```diff
 outputs:
@@ -187,4 +187,25 @@ outputs:
 The `sourceID` fields configures the event source. The resulting event source
 in this case would be `github.com/nsmith5/rekor-sidekick:instance-a`. The event
 type is `rekor-sidekick.policy.violation.v1`. The `http.url` field configures
-an HTTP destination for your emitted events. 
+an HTTP destination for your emitted events.
+
+**Pager Duty**
+
+The `pagerduty` driver emits [Pager Duty](https://pagerduty.com) events. To
+configure Rekor Sidekick to alert to Pager Duty you'll need
+
+- An _API token_. This ca be fetched at _Integrations_ > _API Access keys_.
+- An _Integration Key_. This ca be fetched at _Automation_ > _Event Rules_ >
+  _Your rule set_ > _View_ > _Integration Key_
+
+Configure the driver as follows:
+
+```diff
+outputs:
++  pagerduty:
++    apitoken: << api token >>
++    integrationKey: << integration key >>
++    severity: error
+```
+
+The severity can be one of `critical`, `warning`, `error`, or `info`.

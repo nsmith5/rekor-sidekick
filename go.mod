@@ -3,6 +3,7 @@ module github.com/nsmith5/rekor-sidekick
 go 1.17
 
 require (
+	github.com/PagerDuty/go-pagerduty v1.4.3
 	github.com/cloudevents/sdk-go/v2 v2.8.0
 	github.com/mitchellh/mapstructure v1.4.3
 	github.com/oklog/run v1.1.0
@@ -17,6 +18,7 @@ require (
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
+	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/google/uuid v1.1.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect

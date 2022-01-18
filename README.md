@@ -92,9 +92,9 @@ policies:
     so sign an entry
   body: |
     package sidekick
-    
-    import future.keywords.in    
- 
+
+    import future.keywords.in
+
     default alert = false
 
     alert {
@@ -103,7 +103,7 @@ policies:
       emailAddresses := certs[0]["EmailAddresses"]
       some "me@example.com" in emailAddresses
     }
-    
+
 outputs:
   stdout:
     enabled: true
@@ -188,6 +188,8 @@ The `sourceID` fields configures the event source. The resulting event source
 in this case would be `github.com/nsmith5/rekor-sidekick:instance-a`. The event
 type is `rekor-sidekick.policy.violation.v1`. The `http.url` field configures
 an HTTP destination for your emitted events.
+
+TODO(vaikas): Update with example consumer after #27 goes in.
 
 **Pager Duty**
 

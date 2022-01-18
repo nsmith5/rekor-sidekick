@@ -1,0 +1,23 @@
+# Copyright 2021 Chainguard, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rekor-sidekick-config
+data:
+  config: |-
+    server: http://rekor.rekor-system.svc
+    logging:
+      level: info
+    policies:
+    - name: all-the-everythings
+      description: Testing e2e integration
+      body: |
+        package sidekick
+        default alert = true
+    outputs:
+     cloudevents:
+       sourceID: e2e-tests
+       http:
+         url: http://ce-sink.default.svc

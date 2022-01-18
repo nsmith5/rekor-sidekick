@@ -1,0 +1,144 @@
+name: E2E Tests Using Sigstore Scaffolding
+
+on:
+  pull_request:
+    branches: [ main ]
+
+defaults:
+  run:
+    shell: bash
+    working-directory: ./src/github.com/nsmith5/rekor-sidekick
+
+concurrency:
+  group: e2e-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: e2e tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false # Keep running if one leg fails.
+      matrix:
+        k8s-version:
+        - v1.21.x
+
+        leg:
+        - e2e
+
+    env:
+      KNATIVE_VERSION: "1.1.0"
+      SIGSTORE_SCAFFOLDING_RELEASE_VERSION: "v0.1.9-alpha"
+      KO_DOCKER_REPO: registry.local:5000/knative
+      KOCACHE: ~/ko
+
+    steps:
+    - name: Configure DockerHub mirror
+      working-directory: ./
+      run: |
+        tmp=$(mktemp)
+        jq '."registry-mirrors" = ["https://mirror.gcr.io"]' /etc/docker/daemon.json > "$tmp"
+        sudo mv "$tmp" /etc/docker/daemon.json
+        sudo service docker restart
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.17.x
+
+    - uses: imjasonh/setup-ko@v0.4
+      with:
+        version: tip
+
+    - name: Check out our repo
+      uses: actions/checkout@v2
+      with:
+        path: ./src/github.com/nsmith5/rekor-sidekick
+
+    - name: Setup Cluster
+      working-directory: ./src/github.com/nsmith5/rekor-sidekick
+      run: |
+        ./hack/setup-kind.sh \
+          --registry-url $(echo ${KO_DOCKER_REPO} | cut -d'/' -f 1) \
+          --cluster-suffix cluster.local \
+          --k8s-version ${{ matrix.k8s-version }} \
+          --knative-version ${KNATIVE_VERSION}
+
+    - name: Install Sigstore Scaffolding
+      working-directory: ./src/github.com/nsmith5/rekor-sidekick
+      timeout-minutes: 10
+      run: |
+        curl -L https://github.com/vaikas/sigstore-scaffolding/releases/download/${{ env.SIGSTORE_SCAFFOLDING_RELEASE_VERSION }}/release.yaml | kubectl apply -f -
+
+        # Wait for all the ksvc to be up.
+        kubectl wait --timeout 10m -A --for=condition=Ready ksvc --all
+
+    - name: Install rekor-sidekick
+      working-directory: ./src/github.com/nsmith5/rekor-sidekick
+      run: |
+        ko apply -f ./testdata/rekor-sidekick
+
+    - name: Install CE receiver
+      working-directory: ./src/github.com/nsmith5/rekor-sidekick
+      run: |
+        ko apply -f ./testdata/ce-receiver
+
+    - name: Run Tests
+      working-directory: ./src/github.com/nsmith5/rekor-sidekick
+      run: |
+        # Grab the secret from the ctlog-system namespace and make a copy
+        # in our namespace so we can get access to the CT Log public key
+        # so we can verify the SCT coming from there.
+        kubectl -n ctlog-system get secrets ctlog-public-key -oyaml | sed 's/namespace: .*/namespace: default/' | kubectl apply -f -
+
+        curl -L https://github.com/vaikas/sigstore-scaffolding/releases/download/${{ env.SIGSTORE_SCAFFOLDING_RELEASE_VERSION }}/testrelease.yaml | kubectl create -f -
+
+        kubectl wait --for=condition=Complete --timeout=90s job/check-oidc
+        kubectl wait --for=condition=Complete --timeout=90s job/checktree
+
+    - name: Check event received
+      working-directory: ./src/github.com/nsmith5/rekor-sidekick
+      run: |
+        # Just a hacky way to see if we saw the event
+        for i in {1..10}; do
+          kubectl logs -l "serving.knative.dev/service=ce-sink" -c receiver --tail=150 | grep -q "Got Event:" && exit 0 || echo "No event received yet..."
+          sleep 2
+        done
+        # Dump the logs
+        kubectl logs -l "serving.knative.dev/service=ce-sink" -c receiver --tail=150
+        exit 1
+
+    - name: Collect node diagnostics
+      if: ${{ failure() }}
+      run: |
+        for x in $(kubectl get nodes -oname); do
+          echo "::group:: describe $x"
+          kubectl describe $x
+          echo '::endgroup::'
+        done
+
+    - name: Collect pod diagnostics
+      if: ${{ failure() }}
+      run: |
+        for ns in fulcio-system rekor-system trillian-system ctlog-system; do
+          kubectl get pods -n${ns}
+
+          for x in $(kubectl get pods -n${ns} -oname); do
+            echo "::group:: describe $x"
+            kubectl describe -n${ns} $x
+            echo '::endgroup::'
+          done
+        done
+
+    - name: Collect logs
+      if: ${{ failure() }}
+      run: |
+        mkdir -p /tmp/logs
+        kind export logs /tmp/logs
+
+    - name: Upload artifacts
+      if: ${{ failure() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: logs
+        path: /tmp/logs

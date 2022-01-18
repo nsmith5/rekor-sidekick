@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rekor-sidekick
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: rekor-sidekick
+        image: ko://github.com/nsmith5/rekor-sidekick
+        args: [
+          "--config",
+          "/var/run/rekor-sidekick/config.yaml",
+        ]
+        volumeMounts:
+        - name: config
+          mountPath: "/var/run/rekor-sidekick"
+          readOnly: true
+      volumes:
+      - name: config
+        configMap:
+          name: rekor-sidekick-config
+          items:
+          - key: config
+            path: config.yaml

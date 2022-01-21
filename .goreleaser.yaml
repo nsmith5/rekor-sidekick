@@ -7,6 +7,13 @@ builds:
   goarch:
   - amd64
   - arm64
+  ldflags:
+  - "-s -w"
+  - "-extldflags=-zrelro"
+  - "-extldflags=-znow"
+  - "-X github.com/nsmith5/rekor-sidekick/cli/cli.tag={{.Version}}"
+  - "-X github.com/nsmith5/rekor-sidekick/cli/cli.commit={{.FullCommit}}"
+  - "-X github.com/nsmith5/rekor-sidekick/cli/cli.date={{.CommitDate}}"
 
 gomod:
   proxy: true

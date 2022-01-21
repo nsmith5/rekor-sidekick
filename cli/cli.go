@@ -23,6 +23,7 @@ func New() *cobra.Command {
 		Run:   runCLI,
 	}
 	cmd.Flags().String("config", "/etc/rekor-sidekick/config.yaml", "Path to configuration file")
+	cmd.AddCommand(versionCmd)
 	return cmd
 }
 

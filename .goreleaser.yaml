@@ -4,6 +4,8 @@ builds:
   goos:
   - linux
   - darwin
+  - freebsd
+  - windows
   goarch:
   - amd64
   - arm64
@@ -15,6 +17,30 @@ builds:
   - "-X github.com/nsmith5/rekor-sidekick/cli.commit={{.FullCommit}}"
   - "-X github.com/nsmith5/rekor-sidekick/cli.date={{.CommitDate}}"
 
+nfpms:
+- id: default
+  package_name: rekor-sidekick
+  vendor: Nathan Smith
+  homepage: https://www.nfsmith.ca
+  maintainer: Nathan Smith <rekor-sidekick@nfsmith.ca>
+  description: Alerting and monitoring of the Rekor signature transparency log
+  formats:
+  - apk
+  - deb
+  - rpm
+  contents:
+  - src: etc/config.yaml
+    dst: /etc/rekor-sidekick/config.yaml
+    type: config|noreplace
+  - dst: /etc/rekor-sidekick
+    type: dir
+    file_info:
+      mode: 0755
+
+archives:
+- id: binary
+  format: binary
+
 gomod:
   proxy: true
 
@@ -25,19 +51,21 @@ source:
   enabled: true
 
 sboms:
-  - artifacts: archive
-  - id: source # Two different sbom configurations need two different IDs
-    artifacts: source
+- id: binaries
+  artifacts: binary
+- id: packages
+  artifacts: package
 
 signs:
 - cmd: cosign
   env:
   - COSIGN_EXPERIMENTAL=1
   certificate: '${artifact}.pem'
+  signature: '${artifact}.sig'
   args:
     - sign-blob
     - '--output-certificate=${certificate}'
     - '--output-signature=${signature}'
     - '${artifact}'
-  artifacts: checksum
+  artifacts: binary
   output: true

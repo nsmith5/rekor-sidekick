@@ -1,6 +1,7 @@
 package pagerduty
 
 import (
+	"context"
 	"errors"
 
 	"github.com/mitchellh/mapstructure"
@@ -43,7 +44,7 @@ func (d *driver) Send(e outputs.Event) error {
 		Payload:    &payload,
 	}
 
-	_, err := d.client.ManageEvent(&event)
+	_, err := d.client.ManageEventWithContext(context.Background(), &event)
 	if err != nil {
 		return err
 	}

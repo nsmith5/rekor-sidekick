@@ -93,7 +93,8 @@ func (a *impl) Run() error {
 
 				if alert {
 					for _, out := range a.outs {
-						out.Send(outputs.Event{Policy: p, Entry: *entry})
+						// TODO(nsmith5): retry on error?
+						_ = out.Send(outputs.Event{Policy: p, Entry: *entry})
 					}
 				}
 			}

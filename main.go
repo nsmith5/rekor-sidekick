@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	"github.com/nsmith5/rekor-sidekick/cli"
 
 	// Loading output drivers
@@ -12,5 +14,7 @@ import (
 
 func main() {
 	cmd := cli.New()
-	cmd.Execute()
+	if err := cmd.Execute(); err != nil {
+		log.Fatal(err)
+	}
 }

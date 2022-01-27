@@ -41,7 +41,10 @@ func (d *driver) Send(e outputs.Event) error {
 	event := ce.NewEvent()
 	event.SetSource(fmt.Sprintf("%s:%s", eventSourcePrefix, d.sourceID))
 	event.SetType(eventType)
-	event.SetData(ce.ApplicationJSON, e)
+	err := event.SetData(ce.ApplicationJSON, e)
+	if err != nil {
+		return err
+	}
 
 	ctx := ce.ContextWithTarget(context.Background(), d.http.url)
 
@@ -70,7 +73,7 @@ func createDriver(conf map[string]interface{}) (outputs.Output, error) {
 		return nil, ErrConfigMissingURL
 	}
 
-	client, err := ce.NewDefaultClient()
+	client, err := ce.NewClientHTTP()
 	if err != nil {
 		return nil, err
 	}

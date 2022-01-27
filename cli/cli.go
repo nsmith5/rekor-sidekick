@@ -74,7 +74,7 @@ func runCLI(cmd *cobra.Command, args []string) {
 	g.Add(a.Run, func(error) {
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
-		a.Shutdown(ctx)
+		_ = a.Shutdown(ctx)
 	})
 
 	// Signal handler process

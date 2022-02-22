@@ -26,5 +26,11 @@ jobs:
       uses: golangci/golangci-lint-action@v2
       with:
         version: latest
-    - run: go build
-    - run: go test -cover -v ./...
+    - name: build
+      run: go build
+    - name: test
+      run: go test -race -covermode=atomic -coverprofile=coverage.out -v ./...
+    - name: upload coverage
+      uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # v2.1.0
+      with:
+        files: coverage.out

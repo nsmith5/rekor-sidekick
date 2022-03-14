@@ -100,8 +100,8 @@ policies:
     alert {
       encodedCert := input.spec.signature.publicKey.content
       certs := crypto.x509.parse_certificates(encodedCert)
-      emailAddresses := certs[0]["EmailAddresses"]
-      some "me@example.com" in emailAddresses
+      emailAddresses := certs[0].EmailAddresses
+      "me@example.com" in emailAddresses
     }
 
 outputs:

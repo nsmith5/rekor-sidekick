@@ -108,8 +108,8 @@ github.com/NYTimes/gziphandler v1.1.1/go.mod h1:n/CVRwUEOgIxrgPvAQhUUr9oeUtvrhMo
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
 github.com/OneOfOne/xxhash v1.2.8 h1:31czK/TI9sNkxIKfaUfGlU47BAxQ0ztGgd9vPyqimf8=
 github.com/OneOfOne/xxhash v1.2.8/go.mod h1:eZbhyaAYD41SGSSsnmcpxVoRiQ/MPUTjUdIIOT9Um7Q=
-github.com/PagerDuty/go-pagerduty v1.5.0 h1:/p8FGD32G8HGm7MQIjlTPTGXRJ62Qkm8Lmt5BcUVJOo=
-github.com/PagerDuty/go-pagerduty v1.5.0/go.mod h1:txr8VbObXdk2RkqF+C2an4qWssdGY99fK26XYUDjh+4=
+github.com/PagerDuty/go-pagerduty v1.5.1 h1:zpMQ8WwWlUahipB2q+ERVIA9D0/ti8kvsQUSagCK86g=
+github.com/PagerDuty/go-pagerduty v1.5.1/go.mod h1:txr8VbObXdk2RkqF+C2an4qWssdGY99fK26XYUDjh+4=
 github.com/PuerkitoBio/purell v1.0.0/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/purell v1.1.1/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/urlesc v0.0.0-20160726150825-5bd2802263f2/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=

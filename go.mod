@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/PagerDuty/go-pagerduty v1.5.1
-	github.com/cloudevents/sdk-go/v2 v2.10.1
+	github.com/cloudevents/sdk-go/v2 v2.11.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/oklog/run v1.1.0
 	github.com/open-policy-agent/opa v0.42.1

@@ -7,15 +7,15 @@ require (
 	github.com/cloudevents/sdk-go/v2 v2.10.1
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/oklog/run v1.1.0
-	github.com/open-policy-agent/opa v0.42.1
-	github.com/sirupsen/logrus v1.8.1
+	github.com/open-policy-agent/opa v0.44.0
+	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/viper v1.12.0
 )
 
 require (
 	github.com/OneOfOne/xxhash v1.2.8 // indirect
-	github.com/agnivade/levenshtein v1.0.1 // indirect
+	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
@@ -36,14 +36,14 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.3.0 // indirect
-	github.com/vektah/gqlparser/v2 v2.4.5 // indirect
+	github.com/tchap/go-patricia/v2 v2.3.1 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/yashtewari/glob-intersection v0.1.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.17.0 // indirect
-	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
+	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

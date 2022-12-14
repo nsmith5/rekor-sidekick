@@ -33,7 +33,7 @@ jobs:
             ${{ runner.os }}-go-
       - uses: sigstore/cosign-installer@v2.8.1         # installs cosign
       - uses: anchore/sbom-action/download-syft@v0.13.1 # installs syft
-      - uses: goreleaser/goreleaser-action@v3          # run goreleaser
+      - uses: goreleaser/goreleaser-action@v4          # run goreleaser
         with:
           version: latest
           args: release --rm-dist

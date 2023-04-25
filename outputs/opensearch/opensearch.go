@@ -38,7 +38,7 @@ type driver struct {
 
 // Flatten the event and create a reader
 // ALSO returns the id (URL) as a string
-func Searchify(e rekor.LogEntry) (*strings.Reader, string, error) {
+func searchify(e rekor.LogEntry) (*strings.Reader, string, error) {
 	// Struct -> map[string]interface{}
 	data, err := json.Marshal(e)
 	if err != nil {
@@ -49,7 +49,7 @@ func Searchify(e rekor.LogEntry) (*strings.Reader, string, error) {
 	json.Unmarshal(data, &entry)
 
 	// flatten the map
-	entry = Flatten(entry)
+	entry = flatten(entry)
 	url := entry["URL"].(string)
 	slice := strings.Split(url, "/")
 	entryId := slice[len(slice)-1]
@@ -65,12 +65,12 @@ func Searchify(e rekor.LogEntry) (*strings.Reader, string, error) {
 // https://stackoverflow.com/a/39625223
 // Flatten takes a map and returns a new one where nested maps are replaced
 // by dot-delimited keys.
-func Flatten(m map[string]interface{}) map[string]interface{} {
+func flatten(m map[string]interface{}) map[string]interface{} {
 	o := make(map[string]interface{})
 	for k, v := range m {
 		switch child := v.(type) {
 		case map[string]interface{}:
-			nm := Flatten(child)
+			nm := flatten(child)
 			for nk, nv := range nm {
 				o[k+"."+nk] = nv
 			}
@@ -83,7 +83,7 @@ func Flatten(m map[string]interface{}) map[string]interface{} {
 
 func (d *driver) Send(e outputs.Event) error {
 
-	document, id, err := Searchify(e.Entry)
+	document, id, err := searchify(e.Entry)
 	if err != nil {
 		return err
 	}

@@ -1,3 +1,5 @@
+server: https://rekor.sigstore.dev
+
 # Omit or set to -1 to tail the Rekor log
 # index: 0
 

@@ -22,7 +22,7 @@ type impl struct {
 func New(c Config) (Agent, error) {
 	log := newLogger(c)
 
-	rc, err := rekor.NewClient(c.Server)
+	rc, err := rekor.NewClient(c.Server, c.Index)
 	if err != nil {
 		return nil, err
 	}

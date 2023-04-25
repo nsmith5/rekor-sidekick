@@ -19,13 +19,15 @@ type impl struct {
 
 // NewClient returns a Rekor client or fails if the baseURL
 // is misconfigured.
-func NewClient(baseURL string) (Client, error) {
+func NewClient(baseURL string, index int) (Client, error) {
 	rc := impl{
 		baseURL:      baseURL,
 		currentIndex: 0,
 		Client:       new(http.Client),
 	}
 
+	// No starting index provided by the config
+	if index == -1 {
 	// Grab the latest signed tree state and use the tree size as a starting
 	// point to start iterating log entries. Its not the very tip of the log,
 	// but its close enough for us.
@@ -36,6 +38,9 @@ func NewClient(baseURL string) (Client, error) {
 		return nil, fmt.Errorf("failed to get initial tree state. Is rekor server configured correctly? Failured caused by %w", err)
 	}
 	rc.currentIndex = state.TreeSize
+	} else {
+		rc.currentIndex = uint(index)
+	}
 
 	return &rc, nil
 }

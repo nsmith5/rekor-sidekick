@@ -16,17 +16,21 @@ of interest where ever you like.
 │             │              │                    │                ┌────────────┐
 │  Rekor Log  ├──────────────►   Rekor Sidekick   │ ───────────────► Pager Duty │
 │             │              │                    │                └────────────┘
-└─────────────┘ Pull entries └───────────────┬─┬─┬┘
-                                             │ │ │                 ┌────────────┐
-                                             │ │ └─────────────────► Stdout     │
-                                             │ │                   └────────────┘
-                                             │ │
-                                             │ │                   ┌────────────┐
-                                             │ └───────────────────► Loki       │
-                                             │                     └────────────┘
-                                             │
-                                             │                     ┌────────────┐
-                                             └─────────────────────► ...        │
+└─────────────┘ Pull entries └─────────────┬─┬─┬─┬┘
+                                           │ │ │ │                 ┌────────────┐
+                                           │ │ │ └─────────────────► Stdout     │
+                                           │ │ │                   └────────────┘
+                                           │ │ │
+                                           │ │ │                   ┌────────────┐
+                                           │ │ └───────────────────► Loki       │
+                                           │ │                     └────────────┘
+                                           │ │
+                                           │ │                     ┌────────────┐
+                                           │ └─────────────────────► OpenSearch │
+                                           │                       └────────────┘
+                                           │
+                                           │                       ┌────────────┐
+                                           └───────────────────────► ...        │
                                                                    └────────────┘
 ```
 
@@ -211,3 +215,25 @@ outputs:
 ```
 
 The severity can be one of `critical`, `warning`, `error`, or `info`.
+
+**OpenSearch**
+
+The `opensearch` driver logs to [OpenSearch](https://opensearch.org/docs/latest/). To
+configure Rekor Sidekick to push to OpenSearch you'll need
+
+- A _Username_ and _Password_ (only basic auth is supported at this time).
+- A _Server_. E.g. `https://localhost:9200`.
+- An _Index_. E.g. `rekor-log`, to push the events into. (The entry guid will be the `_id`)
+- Optionally an _Insecure_ flag if you need to disable TLS validation. 
+
+Configure the driver as follows:
+
+```diff
+outputs:
++ opensearch:
++   server: https://0.0.0.0:9200
++   insecure: true
++   index: rekor-all
++   username: admin
++   password: admin
+```

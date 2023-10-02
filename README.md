@@ -125,6 +125,7 @@ Rekor Sidekick uses a single configuration file with three important sections:
 
 - `server` to point to the Rekor server you want to monitor,
 - `policies` to specify which entries you want to alert on, and,
+- `index` to specify a starting Rekor index (default `-1` will tail the Rekor log)
 - `outputs` to specify where you want to send your alerts
 
 The `etc` directory contains sample configurations.
